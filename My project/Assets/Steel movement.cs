@@ -6,7 +6,7 @@ public class Steelmovement : MonoBehaviour
 {
     public float moveSpeed;
     public Rigidbody2D rigidbody;
-    private Vector2 move 
+    private Vector2 move;
 
 
   
