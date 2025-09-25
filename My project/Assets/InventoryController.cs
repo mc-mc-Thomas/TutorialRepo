@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+
 
 public class InventoryController : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class InventoryController : MonoBehaviour
     public GameObject slotPrefab;
     public int slotcount;
     public GameObject[] itemPrefabs;
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -27,6 +31,5 @@ public class InventoryController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 }

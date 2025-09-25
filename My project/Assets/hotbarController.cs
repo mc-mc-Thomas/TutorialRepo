@@ -10,13 +10,13 @@ public class hotbarController : MonoBehaviour
     public GameObject slotPrefab;
     public int slotcount = 6;
 
-    //private ItemDictionary itemDictionary;
+    private ItemDictionary itemDictionary;
 
     private Key[] hotbarKeys;
 
     private void Awake()
     {
-        //itemDictionary = FindObjectOfType<itemDictionary>();
+        itemDictionary = FindObjectOfType<itemDictionary>();
 
         hotbarKeys = new Key[slotcount];
         for (int i = 0; i < slotcount; i++)
@@ -32,17 +32,17 @@ public class hotbarController : MonoBehaviour
         {
             if (Keyboard.current[hotbarKeys[i]].wasPressedThisFrame)
             {
-                //UseItemInSlot(i);
+                UseItemInSlot(i);
             }
         }
     }
     void UseItemInSlot(int index)
     {
-        //Slot slot = hotbarPanel.transform.GetChild(index).GetComponent<Slot>();
-        //if (slot != null)
-        //{
-        //    Item item = slot.currentItem.GetComponent<Item>();
-        //    item.Useitem();
-        //}
+        Slot slot = hotbarPanel.transform.GetChild(index).GetComponent<Slot>();
+        if (slot != null)
+        {
+            Item item = slot.currentItem.GetComponent<Item>();
+            item.Useitem();
+        }
     }
 }
