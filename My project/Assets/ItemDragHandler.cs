@@ -28,7 +28,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     }
 
     public void OnEndDrag(PointerEventData eventData)
-    {
+    {        
         canvasGroup.blocksRaycasts = true; //Enables raycasts
         canvasGroup.alpha = 1f; //No longer transparent
 
@@ -45,6 +45,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         if (dropSlot != null)
         {
+
             //Is a slot under drop point
             if (dropSlot.currentItem != null)
             {
@@ -64,10 +65,26 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
         else
         {
+            //If we are dropping is not within the inventory
+            if(!)
+            //Drop our item
+
+            //else
             //No slot under drop point
             transform.SetParent(originalParent);
         }
 
         GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
     }
+
+    bool IsWithinInventory(Vector2 mousePosition)
+    {
+        RectTransform inventoryRect = originalParent.parent.GetComponent<RectTransform>();
+        return RectTransformUtility.RectangleContainsScreenPoint (iventoryRect, mousePosition)
+
+
+    }
+
+
+
 }
