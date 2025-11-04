@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,6 +7,10 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 {
     Transform originalParent;
     CanvasGroup canvasGroup;
+
+    public float minDropDistance = 1f;
+
+    public float maxDropDistance = 1f;
 
     // Start is called before the first frame update
     void Start()
@@ -66,8 +70,15 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         else
         {
             //If we are dropping is not within the inventory
-            if(!)
-            //Drop our item
+            if(!IsWithinInventory(eventData.position))
+            {
+                //Drop our item
+                DropItem(originalSlot);
+            }
+            else
+            {
+                transform.SetParent(originalParent);
+            }
 
             //else
             //No slot under drop point
@@ -80,10 +91,46 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     bool IsWithinInventory(Vector2 mousePosition)
     {
         RectTransform inventoryRect = originalParent.parent.GetComponent<RectTransform>();
-        return RectTransformUtility.RectangleContainsScreenPoint (iventoryRect, mousePosition)
+        return RectTransformUtility.RectangleContainsScreenPoint(inventoryRect, mousePosition);
 
 
     }
+
+    void DropItem(Slot originalSlot)
+    {
+        originalSlot.currentItem = null;
+
+        Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (playerTransform == null)
+        {
+            Debug.LogError("Missing 'Player' tag");
+            return;
+        }
+
+        // Mausposition in Weltkoordinaten
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorldPos.z = 0f;
+
+        Vector2 playerPos = playerTransform.position;
+        Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+
+        // Abstand zwischen Maus und Spieler
+        float distance = Vector2.Distance(playerPos, targetPos);
+
+        // Wenn zu weit weg → clamp auf maximale Distanz
+        if (distance > maxDropDistance)
+        {
+            Vector2 direction = (targetPos - playerPos).normalized;
+            targetPos = playerPos + direction * maxDropDistance;
+        }
+
+        // Item spawnen an berechneter Position
+        Instantiate(gameObject, targetPos, Quaternion.identity);
+
+        // UI-Item zerstören
+        Destroy(gameObject);
+    }
+
 
 
 
