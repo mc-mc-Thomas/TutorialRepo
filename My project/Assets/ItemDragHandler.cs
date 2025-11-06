@@ -32,7 +32,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     }
 
     public void OnEndDrag(PointerEventData eventData)
-    {        
+    {
         canvasGroup.blocksRaycasts = true; //Enables raycasts
         canvasGroup.alpha = 1f; //No longer transparent
 
@@ -70,7 +70,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         else
         {
             //If we are dropping is not within the inventory
-            if(!IsWithinInventory(eventData.position))
+            if (!IsWithinInventory(eventData.position))
             {
                 //Drop our item
                 DropItem(originalSlot);
