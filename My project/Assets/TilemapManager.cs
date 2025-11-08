@@ -24,12 +24,12 @@ public class TreeTilemapManager : MonoBehaviour
             // Mausposition → Tile-Position
             Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
-            Vector3Int tilePos = treeTilemaps[0].WorldToCell(mouseWorld); // nimm erste Tilemap für die Position
+            Vector3Int tilePos = treeTilemaps[0].WorldToCell(mouseWorld);
 
             TileBase clickedTile = null;
             Tilemap clickedMap = null;
 
-            // Finde heraus, auf welcher Tilemap überhaupt etwas getroffen wurde
+            // Finde heraus, ob überhaupt ein "Tree"-Tile getroffen wurde
             foreach (var map in treeTilemaps)
             {
                 var tile = map.GetTile(tilePos);
@@ -41,21 +41,19 @@ public class TreeTilemapManager : MonoBehaviour
                 }
             }
 
-            if (clickedTile == null) return;
+            // Wenn KEIN Tree-Tile getroffen wurde → gar nichts tun!
+            if (clickedTile == null)
+                return;
 
-            // Alle verbundenen Tiles finden
+            // Alle verbundenen Tree-Tiles finden
             List<Vector3Int> connected = GetConnectedTreeTiles(tilePos);
 
-            // Baum-Hits reduzieren
-            foreach (Vector3Int pos in connected)
-            {
-                if (!treeHealth.ContainsKey(pos))
-                    treeHealth[pos] = hitsToBreak;
-                treeHealth[pos]--;
-            }
+            // Wenn keine Tree-Tiles gefunden → auch abbrechen
+            if (connected.Count == 0)
+                return;
 
             // -------------------------------
-            // Partikel bei Mausposition
+            // Partikel bei Mausposition (nur wenn Tree getroffen)
             if (woodSplinterEffectPrefab != null)
             {
                 GameObject particles = Instantiate(woodSplinterEffectPrefab, mouseWorld, Quaternion.identity);
@@ -64,6 +62,14 @@ public class TreeTilemapManager : MonoBehaviour
                     Destroy(particles, ps.main.duration + ps.main.startLifetime.constantMax);
             }
             // -------------------------------
+
+            // Baum-Hits reduzieren
+            foreach (Vector3Int pos in connected)
+            {
+                if (!treeHealth.ContainsKey(pos))
+                    treeHealth[pos] = hitsToBreak;
+                treeHealth[pos]--;
+            }
 
             // Prüfen, ob Baum komplett zerstört
             bool allDestroyed = true;
@@ -85,7 +91,7 @@ public class TreeTilemapManager : MonoBehaviour
                         map.SetTile(pos, null);
                 }
 
-                // Stamm spawnen auf der untersten Tilemap (z. B. die erste)
+                // Stamm spawnen
                 SpawnStump(connected, treeTilemaps[0]);
 
                 // Health-Einträge entfernen
@@ -94,6 +100,7 @@ public class TreeTilemapManager : MonoBehaviour
             }
         }
     }
+
 
     // Verbindene Tree-Tiles suchen (alle Tilemaps werden berücksichtigt)
     List<Vector3Int> GetConnectedTreeTiles(Vector3Int startPos)
