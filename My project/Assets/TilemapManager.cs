@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class TreeTilemapManager : MonoBehaviour
 {
-    public GameObject woodSplinterEffectPrefab;  // Holzsplitter Partikel Prefab
+    [Header("Effekte")]
+    public GameObject woodSplinterEffectPrefab;
 
     [Header("Referenzen")]
     public List<Tilemap> treeTilemaps; // mehrere Tilemaps (z. B. WalkBehind + Collision)
@@ -15,94 +16,101 @@ public class TreeTilemapManager : MonoBehaviour
     private Dictionary<Vector3Int, int> treeHealth = new Dictionary<Vector3Int, int>();
 
     [Header("Stamm-Einstellungen")]
-    public List<TileBase> stumpTiles; // 4 Tiles (2x2)
+    public List<TileBase> stumpTiles; // genau 4 Tiles (2x2)
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
+            HandleTreeClick();
+    }
+
+    void HandleTreeClick()
+    {
+        // Mausposition → Tile-Position
+        Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorld.z = 0;
+        Vector3Int tilePos = treeTilemaps[0].WorldToCell(mouseWorld);
+
+        // Finde getroffenes Tree-Tile
+        TileBase clickedTile = null;
+        Tilemap clickedMap = null;
+
+        foreach (var map in treeTilemaps)
         {
-            // Mausposition → Tile-Position
-            Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorld.z = 0;
-            Vector3Int tilePos = treeTilemaps[0].WorldToCell(mouseWorld);
-
-            TileBase clickedTile = null;
-            Tilemap clickedMap = null;
-
-            // Finde heraus, ob überhaupt ein "Tree"-Tile getroffen wurde
-            foreach (var map in treeTilemaps)
+            TileBase tile = map.GetTile(tilePos);
+            if (IsTreeTile(tile))
             {
-                var tile = map.GetTile(tilePos);
-                if (tile != null && tile.name.ToLower().Contains("tree"))
-                {
-                    clickedTile = tile;
-                    clickedMap = map;
-                    break;
-                }
+                clickedTile = tile;
+                clickedMap = map;
+                break;
             }
+        }
 
-            // Wenn KEIN Tree-Tile getroffen wurde → gar nichts tun!
-            if (clickedTile == null)
-                return;
+        // Kein Baum getroffen → nichts tun
+        if (clickedTile == null)
+            return;
 
-            // Alle verbundenen Tree-Tiles finden
-            List<Vector3Int> connected = GetConnectedTreeTiles(tilePos);
+        // Alle verbundenen Baum-Tiles finden
+        List<Vector3Int> connected = GetConnectedTreeTiles(tilePos);
+        if (connected.Count == 0)
+            return;
 
-            // Wenn keine Tree-Tiles gefunden → auch abbrechen
-            if (connected.Count == 0)
-                return;
+        // Partikel-Effekt
+        if (woodSplinterEffectPrefab != null)
+        {
+            GameObject particles = Instantiate(woodSplinterEffectPrefab, mouseWorld, Quaternion.identity);
+            var ps = particles.GetComponent<ParticleSystem>();
+            if (ps != null)
+                Destroy(particles, ps.main.duration + ps.main.startLifetime.constantMax);
+        }
 
-            // -------------------------------
-            // Partikel bei Mausposition (nur wenn Tree getroffen)
-            if (woodSplinterEffectPrefab != null)
+        // Trefferpunkte verringern
+        foreach (Vector3Int pos in connected)
+        {
+            if (!treeHealth.ContainsKey(pos))
+                treeHealth[pos] = hitsToBreak;
+
+            treeHealth[pos]--;
+        }
+
+        // Prüfen, ob alle Teile zerstört sind
+        bool allDestroyed = true;
+        foreach (Vector3Int pos in connected)
+        {
+            if (treeHealth[pos] > 0)
             {
-                GameObject particles = Instantiate(woodSplinterEffectPrefab, mouseWorld, Quaternion.identity);
-                var ps = particles.GetComponent<ParticleSystem>();
-                if (ps != null)
-                    Destroy(particles, ps.main.duration + ps.main.startLifetime.constantMax);
+                allDestroyed = false;
+                break;
             }
-            // -------------------------------
+        }
 
-            // Baum-Hits reduzieren
+        // Wenn Baum vollständig zerstört
+        if (allDestroyed)
+        {
             foreach (Vector3Int pos in connected)
             {
-                if (!treeHealth.ContainsKey(pos))
-                    treeHealth[pos] = hitsToBreak;
-                treeHealth[pos]--;
-            }
-
-            // Prüfen, ob Baum komplett zerstört
-            bool allDestroyed = true;
-            foreach (Vector3Int pos in connected)
-            {
-                if (treeHealth[pos] > 0)
+                foreach (var map in treeTilemaps)
                 {
-                    allDestroyed = false;
-                    break;
-                }
-            }
-
-            if (allDestroyed)
-            {
-                // Entferne alle Tree-Tiles von allen Tree-Tilemaps
-                foreach (Vector3Int pos in connected)
-                {
-                    foreach (var map in treeTilemaps)
+                    if (IsTreeTile(map.GetTile(pos)))
                         map.SetTile(pos, null);
                 }
-
-                // Stamm spawnen
-                SpawnStump(connected, treeTilemaps[0]);
-
-                // Health-Einträge entfernen
-                foreach (Vector3Int pos in connected)
-                    treeHealth.Remove(pos);
+                treeHealth.Remove(pos);
             }
+
+            SpawnStump(connected, treeTilemaps[0]);
         }
     }
 
+    // Nur Tiles, deren Name "tree" enthält, zählen
+    bool IsTreeTile(TileBase tile)
+    {
+        if (tile == null) return false;
+        return tile.name.ToLower().Contains("tree");
+        // Alternativ, falls du eine eigene Klasse nutzt:
+        // return tile is TreeTile;
+    }
 
-    // Verbindene Tree-Tiles suchen (alle Tilemaps werden berücksichtigt)
+    // BFS, um alle verbundenen Baum-Tiles zu finden
     List<Vector3Int> GetConnectedTreeTiles(Vector3Int startPos)
     {
         List<Vector3Int> connected = new List<Vector3Int>();
@@ -115,21 +123,21 @@ public class TreeTilemapManager : MonoBehaviour
         while (toCheck.Count > 0)
         {
             Vector3Int current = toCheck.Dequeue();
-            if (visited.Contains(current)) continue;
+            if (visited.Contains(current))
+                continue;
             visited.Add(current);
 
-            bool foundTree = false;
+            bool isTree = false;
             foreach (var map in treeTilemaps)
             {
-                TileBase tile = map.GetTile(current);
-                if (tile != null && tile.name.ToLower().Contains("tree"))
+                if (IsTreeTile(map.GetTile(current)))
                 {
-                    foundTree = true;
+                    isTree = true;
                     break;
                 }
             }
 
-            if (!foundTree) continue;
+            if (!isTree) continue;
             connected.Add(current);
 
             foreach (var dir in dirs)
@@ -139,7 +147,6 @@ public class TreeTilemapManager : MonoBehaviour
         return connected;
     }
 
-    // Stumpf auf einer bestimmten Tilemap setzen
     void SpawnStump(List<Vector3Int> connectedTiles, Tilemap targetTilemap)
     {
         if (stumpTiles == null || stumpTiles.Count != 4)
@@ -148,7 +155,7 @@ public class TreeTilemapManager : MonoBehaviour
             return;
         }
 
-        // unterste linke Position bestimmen
+        // Unterste linke Position finden
         Vector3Int bottomLeft = connectedTiles[0];
         foreach (var pos in connectedTiles)
         {
@@ -156,10 +163,10 @@ public class TreeTilemapManager : MonoBehaviour
                 bottomLeft = pos;
         }
 
-        // 2x2 Stumpf setzen
+        // 2x2 Stumpf platzieren
         targetTilemap.SetTile(bottomLeft, stumpTiles[0]);
-        targetTilemap.SetTile(new Vector3Int(bottomLeft.x + 1, bottomLeft.y, bottomLeft.z), stumpTiles[1]);
-        targetTilemap.SetTile(new Vector3Int(bottomLeft.x, bottomLeft.y + 1, bottomLeft.z), stumpTiles[2]);
-        targetTilemap.SetTile(new Vector3Int(bottomLeft.x + 1, bottomLeft.y + 1, bottomLeft.z), stumpTiles[3]);
+        targetTilemap.SetTile(bottomLeft + Vector3Int.right, stumpTiles[1]);
+        targetTilemap.SetTile(bottomLeft + Vector3Int.up, stumpTiles[2]);
+        targetTilemap.SetTile(bottomLeft + Vector3Int.up + Vector3Int.right, stumpTiles[3]);
     }
 }

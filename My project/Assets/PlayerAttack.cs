@@ -22,30 +22,27 @@ public class TreeTileBreakerMulti : MonoBehaviour
 
         TileBase clickedTile = treeTilemap.GetTile(clickedPos);
 
-        if (clickedTile == null)
+        // Wenn kein Tile vorhanden ist oder kein Baum-Tile, nichts tun
+        if (clickedTile == null || !IsTreeTile(clickedTile))
             return;
 
-        // Sammle alle verbundenen Tiles
         RemoveConnectedTreeTiles(clickedPos, clickedTile);
     }
 
     void RemoveConnectedTreeTiles(Vector3Int startPos, TileBase treeType)
     {
-        // 4-Richtungs-Suche (optional: 8 Richtungen für diagonale Verbindungen)
         Vector3Int[] directions = {
             Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right
         };
 
-        // Rekursive Suche (DFS)
         void FloodFill(Vector3Int pos)
         {
             TileBase tile = treeTilemap.GetTile(pos);
-            if (tile == null || tile != treeType) return;
+            if (tile == null || tile != treeType || !IsTreeTile(tile))
+                return;
 
-            // Entferne das Tile
             treeTilemap.SetTile(pos, destroyedTile);
 
-            // Suche angrenzende Tiles
             foreach (var dir in directions)
             {
                 FloodFill(pos + dir);
@@ -53,5 +50,12 @@ public class TreeTileBreakerMulti : MonoBehaviour
         }
 
         FloodFill(startPos);
+    }
+
+    // Prüft, ob das Tile ein Baum ist
+    bool IsTreeTile(TileBase tile)
+    {
+        // Beispiel: anhand des Namens
+        return tile.name.ToLower().Contains("tree");
     }
 }
