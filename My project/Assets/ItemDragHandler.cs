@@ -8,9 +8,12 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     Transform originalParent;
     CanvasGroup canvasGroup;
 
-    public float minDropDistance = 1f;
+    public float minDropDistance = 50f;
 
-    public float maxDropDistance = 1f;
+    public float maxDropDistance = 70f;
+
+    Vector2 position2 = new Vector2(10f, 15f);
+
 
     // Start is called before the first frame update
     void Start()
@@ -106,29 +109,48 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             Debug.LogError("Missing 'Player' tag");
             return;
         }
+        //Random drop position
+        Vector2 dropOffset = Random.insideUnitCircle.normalized * Random.Range(minDropDistance, maxDropDistance);
+        Vector2 dropPosition = (Vector2)playerTransform.position + dropOffset;
 
-        // Mausposition in Weltkoordinaten
-        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorldPos.z = 0f;
+        Vector3 mausBildschirmPosition = Input.mousePosition;
 
-        Vector2 playerPos = playerTransform.position;
-        Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+        // 2️⃣ In Weltkoordinaten umwandeln
+        Vector3 mausWeltPosition = Camera.main.ScreenToWorldPoint(mausBildschirmPosition);
 
-        // Abstand zwischen Maus und Spieler
-        float distance = Vector2.Distance(playerPos, targetPos);
+        // 3️⃣ Z auf 0 setzen (damit es im 2D-Raum liegt)
+        mausWeltPosition.z = 0f;
 
-        // Wenn zu weit weg → clamp auf maximale Distanz
-        if (distance > maxDropDistance)
-        {
-            Vector2 direction = (targetPos - playerPos).normalized;
-            targetPos = playerPos + direction * maxDropDistance;
-        }
+        //Instatiate drop Item
+        Instantiate(gameObject, mausWeltPosition, Quaternion.identity);
 
-        // Item spawnen an berechneter Position
-        Instantiate(gameObject, targetPos, Quaternion.identity);
-
-        // UI-Item zerstören
+        //Destroy the UI
         Destroy(gameObject);
+
+
+
+        //// Mausposition in Weltkoordinaten
+        //Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //mouseWorldPos.z = 0f;
+
+        //Vector2 playerPos = playerTransform.position;
+        //Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+
+        //// Abstand zwischen Maus und Spieler
+        //float distance = Vector2.Distance(playerPos, targetPos);
+
+        //// Wenn zu weit weg → clamp auf maximale Distanz
+        //if (distance > maxDropDistance)
+        //{
+        //    Vector2 direction = (targetPos - playerPos).normalized;
+        //    targetPos = playerPos + direction * maxDropDistance;
+        //}
+
+        //// Item spawnen an berechneter Position
+        //Instantiate(gameObject, targetPos, Quaternion.identity);
+
+        //// UI-Item zerstören
+        //Destroy(gameObject);
     }
 
 
