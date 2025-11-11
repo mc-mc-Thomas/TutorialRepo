@@ -9,5 +9,5 @@ public class Item : MonoBehaviour
     public virtual void UseItem()
     {
         Debug.Log("Using item: " + ID);
-    }   
+    }
 }
