@@ -11,6 +11,13 @@ public class TreeTilemapManager : MonoBehaviour
     public List<Tilemap> treeTilemaps; // mehrere Tilemaps (z. B. WalkBehind + Collision)
     public Camera mainCamera;
 
+    public GameObject wood;
+
+    [Header("Drop Settings")]
+    public int minWoodDrop = 2;
+    public int maxWoodDrop = 3;
+    public float dropForce = 3f;
+
     [Header("Baum-Einstellungen")]
     public int hitsToBreak = 3;
     private Dictionary<Vector3Int, int> treeHealth = new Dictionary<Vector3Int, int>();
@@ -80,7 +87,31 @@ public class TreeTilemapManager : MonoBehaviour
             if (treeHealth[pos] > 0)
             {
                 allDestroyed = false;
+
+                
+
                 break;
+            }
+        }
+        void DropWood(Vector3 position)
+        {
+            position.z = 0; // Sichtbar vor Tilemap
+
+            GameObject newWood = Instantiate(wood, position, Quaternion.identity);
+
+            Rigidbody2D rb = newWood.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                // Richtung
+                Vector2 dir = Random.insideUnitCircle.normalized;
+
+                // Mindestens 2 Tiles weit fliegen
+                float minForce = 6f;   // 2 Tiles = ca. 2 Einheiten → Impuls ca. 4–7 reicht
+                float maxForce = 10f;
+
+                float force = Random.Range(minForce, maxForce);
+
+                rb.AddForce(dir * force, ForceMode2D.Impulse);
             }
         }
 
@@ -96,7 +127,15 @@ public class TreeTilemapManager : MonoBehaviour
                 }
                 treeHealth.Remove(pos);
             }
+            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorldPos.z = 0f;
 
+            int woodCount = Random.Range(minWoodDrop, maxWoodDrop + 1);
+            for (int i = 0; i < woodCount; i++)
+            {
+                DropWood(mouseWorldPos);
+                Debug.Log("drop");
+            }
             SpawnStump(connected, treeTilemaps[0]);
         }
     }

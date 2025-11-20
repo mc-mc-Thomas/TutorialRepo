@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class TreeTileBreakerMulti : MonoBehaviour
@@ -7,12 +7,6 @@ public class TreeTileBreakerMulti : MonoBehaviour
     public Camera mainCamera;
     public TileBase destroyedTile;
 
-    public GameObject wood;
-
-    [Header("Drop Settings")]
-    public int minWoodDrop = 2;
-    public int maxWoodDrop = 3;
-    public float dropForce = 3f; // Wie stark die Teile "wegfliegen"
 
     void Update()
     {
@@ -25,37 +19,18 @@ public class TreeTileBreakerMulti : MonoBehaviour
     void BreakTree()
     {
         Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorldPos.z = 0f; // Wichtig für 2D!
+        mouseWorldPos.z = 0f;
 
         Vector3Int clickedPos = treeTilemap.WorldToCell(mouseWorldPos);
         TileBase clickedTile = treeTilemap.GetTile(clickedPos);
 
-        if (clickedTile == null || !IsTreeTile(clickedTile))
-            return;
+        // ðŸŸ¥ Wenn das kein Baumtile ist â†’ Abbruch
+        if (clickedTile == null || !IsTreeTile(clickedTile)) return;
 
-        // Holz droppen
-        int woodCount = Random.Range(minWoodDrop, maxWoodDrop + 1);
-        for (int i = 0; i < woodCount; i++)
-        {
-            DropWood(mouseWorldPos);
-        }
+        // ðŸŸ¢ Holz droppen
 
-        // Baum entfernen
+        // Baum entfernen (Flood Fill)
         RemoveConnectedTreeTiles(clickedPos, clickedTile);
-    }
-
-    void DropWood(Vector3 position)
-    {
-        // Holz-Objekt erzeugen
-        GameObject newWood = Instantiate(wood, position, Quaternion.identity);
-
-        // Zufällige Richtung und Kraft
-        Rigidbody2D rb = newWood.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            Vector2 randomDir = Random.insideUnitCircle.normalized; // zufällige Richtung
-            rb.AddForce(randomDir * dropForce, ForceMode2D.Impulse);
-        }
     }
 
     void RemoveConnectedTreeTiles(Vector3Int startPos, TileBase treeType)
@@ -73,16 +48,13 @@ public class TreeTileBreakerMulti : MonoBehaviour
             treeTilemap.SetTile(pos, destroyedTile);
 
             foreach (var dir in directions)
-            {
                 FloodFill(pos + dir);
-            }
         }
 
         FloodFill(startPos);
     }
-
-    bool IsTreeTile(TileBase tile)
-    {
-        return tile.name.ToLower().Contains("tree");
+    bool IsTreeTile(TileBase tile) 
+    { 
+        return tile.name.ToLower().Contains("tree"); 
     }
 }
