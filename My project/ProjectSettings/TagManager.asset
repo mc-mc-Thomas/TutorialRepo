@@ -51,6 +51,9 @@ TagManager:
   - name: Collision
     uniqueID: 474547853
     locked: 0
+  - name: "\xFCberCollision"
+    uniqueID: 3447499241
+    locked: 0
   - name: Player
     uniqueID: 2707129465
     locked: 0
