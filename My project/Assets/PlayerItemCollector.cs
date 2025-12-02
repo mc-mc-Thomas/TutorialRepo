@@ -19,19 +19,16 @@ public class PlayerItemCollector : MonoBehaviour
     {
         if (collision.CompareTag("Item"))
         {
-            Debug.Log("geht");
+            gameObject bum = collision.gameObject;
+
             Item item = collision.GetComponent<Item>();
+            
             if (item != null)
             {
                 //add Item inventory
                 bool itemAdded = InventoryController.AddItem(collision.gameObject);
-
-                if (itemAdded)
-                {
-                    Destroy(collision.gameObject);
-                }
+                Destroy(bum);
             }
-
         }
     }
 
