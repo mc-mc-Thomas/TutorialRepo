@@ -75,8 +75,21 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             //If we are dropping is not within the inventory
             if (!IsWithinInventory(eventData.position))
             {
-                //Drop our item
-                DropItem(originalSlot);
+                if (!IsWithinInventory(eventData.position))
+                {
+                    // Prüfe, ob dieses Item ein Welt-Prefab platzieren soll
+                    PlaceableUIItem placeable = GetComponent<PlaceableUIItem>();
+                    if (placeable != null)
+                    {
+                        PlacePrefabOnGrid(placeable.worldPrefab);
+                        Destroy(gameObject); // UI Item entfernen
+                        return;
+                    }
+
+                    // Normales Drop-Item-Verhalten
+                    DropItem(originalSlot);
+                }
+
             }
             else
             {
@@ -126,31 +139,46 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         //Destroy the UI
         Destroy(gameObject);
+    }
+    void PlacePrefabOnGrid(GameObject prefab)
+    {
+        if (prefab == null)
+            return;
 
+        // Welt-Grid holen
+        Grid grid = GetGridByName("Collision");
 
+        if (grid == null)
+        {
+            Debug.LogError("Kein Grid in der Szene gefunden!");
+            return;
+        }
 
-        //// Mausposition in Weltkoordinaten
-        //Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        //mouseWorldPos.z = 0f;
+        // Mausposition in Weltkoordinaten
+        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorld.z = 0f;
 
-        //Vector2 playerPos = playerTransform.position;
-        //Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+        // Welt → Grid Cell
+        Vector3Int cell = grid.WorldToCell(mouseWorld);
 
-        //// Abstand zwischen Maus und Spieler
-        //float distance = Vector2.Distance(playerPos, targetPos);
+        // Mitte der Zelle holen (perfektes Snapping)
+        Vector3 cellCenter = grid.GetCellCenterWorld(cell);
 
-        //// Wenn zu weit weg → clamp auf maximale Distanz
-        //if (distance > maxDropDistance)
-        //{
-        //    Vector2 direction = (targetPos - playerPos).normalized;
-        //    targetPos = playerPos + direction * maxDropDistance;
-        //}
+        // Prefab spawnen
+        Instantiate(prefab, cellCenter, Quaternion.identity);
+    }
+    Grid GetGridByName(string name)
+    {
+        Grid[] grids = FindObjectsOfType<Grid>();
 
-        //// Item spawnen an berechneter Position
-        //Instantiate(gameObject, targetPos, Quaternion.identity);
+        foreach (Grid g in grids)
+        {
+            if (g.gameObject.name == name)
+                return g;
+        }
 
-        //// UI-Item zerstören
-        //Destroy(gameObject);
+        Debug.LogError("Kein Grid mit dem Namen '" + name + "' gefunden!");
+        return null;
     }
 
 
