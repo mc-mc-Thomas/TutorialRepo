@@ -112,6 +112,10 @@ PrefabInstance:
       propertyPath: ID
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 8478674265503733995, guid: d82dd565058d5384f91426782e7db1ed, type: 3}
+      propertyPath: chestTriggerPrefab
+      value: 
+      objectReference: {fileID: 3680488783268501482, guid: a19dfeabd33609748868ddfbf6be706d, type: 3}
     - target: {fileID: 9045894582480835308, guid: d82dd565058d5384f91426782e7db1ed, type: 3}
       propertyPath: m_Name
       value: chest
@@ -122,14 +126,14 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 9045894582480835308, guid: d82dd565058d5384f91426782e7db1ed, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1255629795283028487}
+      addedObject: {fileID: 8080086458995136632}
   m_SourcePrefab: {fileID: 100100000, guid: d82dd565058d5384f91426782e7db1ed, type: 3}
 --- !u!1 &8184313220953747153 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9045894582480835308, guid: d82dd565058d5384f91426782e7db1ed, type: 3}
   m_PrefabInstance: {fileID: 873131740072098877}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1255629795283028487
+--- !u!114 &8080086458995136632
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -141,4 +145,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38e042eb6c67d2b429ab09faabb6cee3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldPrefab: {fileID: 0}
+  tileSprite: {fileID: 21300000, guid: 78962fb0ad70fb54b99ea60f993b8261, type: 3}

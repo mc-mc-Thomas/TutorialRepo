@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Tilemaps;   // <-- Wichtig für Tilemap
 
 public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -9,13 +10,10 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     CanvasGroup canvasGroup;
 
     public float minDropDistance = 50f;
-
     public float maxDropDistance = 70f;
 
-    Vector2 position2 = new Vector2(10f, 15f);
+    public GameObject chestTriggerPrefab;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         canvasGroup = GetComponent<CanvasGroup>();
@@ -23,40 +21,37 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        originalParent = transform.parent; //Save OG parent
-        transform.SetParent(transform.root); //Above other canvas'
+        originalParent = transform.parent;
+        transform.SetParent(transform.root);
         canvasGroup.blocksRaycasts = false;
-        canvasGroup.alpha = 0.6f; //Semi-transparent during drag
+        canvasGroup.alpha = 0.6f;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        transform.position = eventData.position; //Follow the mouse
+        transform.position = eventData.position;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        canvasGroup.blocksRaycasts = true; //Enables raycasts
-        canvasGroup.alpha = 1f; //No longer transparent
+        canvasGroup.blocksRaycasts = true;
+        canvasGroup.alpha = 1f;
 
-        Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>(); //Slot where item dropped
+        Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>();
         if (dropSlot == null)
         {
             GameObject dropItem = eventData.pointerEnter;
             if (dropItem != null)
-            {
                 dropSlot = dropItem.GetComponentInParent<Slot>();
-            }
         }
+
         Slot originalSlot = originalParent.GetComponent<Slot>();
 
+        // --- Wenn in ein Inventar-Slot gedroppt ---
         if (dropSlot != null)
         {
-
-            //Is a slot under drop point
             if (dropSlot.currentItem != null)
             {
-                //Slot has an item - swap items
                 dropSlot.currentItem.transform.SetParent(originalSlot.transform);
                 originalSlot.currentItem = dropSlot.currentItem;
                 dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
@@ -66,50 +61,39 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                 originalSlot.currentItem = null;
             }
 
-            //Move item into drop slot
             transform.SetParent(dropSlot.transform);
             dropSlot.currentItem = gameObject;
+
+            GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+            return;
+        }
+
+        if (!IsWithinInventory(eventData.position))
+        {
+            PlaceableUIItem placeable = GetComponent<PlaceableUIItem>();
+            if (placeable != null)
+            {
+                PlaceTileOnTilemap(placeable.tileSprite);
+                Destroy(gameObject);  // UI Item entfernen
+                return;
+            }
+
+
+            // normales Item droppen
+            DropItem(originalSlot);
         }
         else
         {
-            //If we are dropping is not within the inventory
-            if (!IsWithinInventory(eventData.position))
-            {
-                if (!IsWithinInventory(eventData.position))
-                {
-                    // Prüfe, ob dieses Item ein Welt-Prefab platzieren soll
-                    PlaceableUIItem placeable = GetComponent<PlaceableUIItem>();
-                    if (placeable != null)
-                    {
-                        PlacePrefabOnGrid(placeable.worldPrefab);
-                        Destroy(gameObject); // UI Item entfernen
-                        return;
-                    }
-
-                    // Normales Drop-Item-Verhalten
-                    DropItem(originalSlot);
-                }
-
-            }
-            else
-            {
-                transform.SetParent(originalParent);
-            }
-
-            //else
-            //No slot under drop point
             transform.SetParent(originalParent);
         }
 
-        GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+        GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
     }
 
     bool IsWithinInventory(Vector2 mousePosition)
     {
         RectTransform inventoryRect = originalParent.parent.GetComponent<RectTransform>();
         return RectTransformUtility.RectangleContainsScreenPoint(inventoryRect, mousePosition);
-
-
     }
 
     void DropItem(Slot originalSlot)
@@ -122,66 +106,58 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             Debug.LogError("Missing 'Player' tag");
             return;
         }
-        //Random drop position
-        Vector2 dropOffset = Random.insideUnitCircle.normalized * Random.Range(minDropDistance, maxDropDistance);
-        Vector2 dropPosition = (Vector2)playerTransform.position + dropOffset;
 
-        Vector3 mausBildschirmPosition = Input.mousePosition;
-
-        // 2️⃣ In Weltkoordinaten umwandeln
-        Vector3 mausWeltPosition = Camera.main.ScreenToWorldPoint(mausBildschirmPosition);
-
-        // 3️⃣ Z auf 0 setzen (damit es im 2D-Raum liegt)
+        Vector3 mausWeltPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mausWeltPosition.z = 0f;
 
-        //Instatiate drop Item
         Instantiate(gameObject, mausWeltPosition, Quaternion.identity);
-
-        //Destroy the UI
         Destroy(gameObject);
     }
-    void PlacePrefabOnGrid(GameObject prefab)
+
+
+    void PlaceTileOnTilemap(Sprite sprite)
     {
-        if (prefab == null)
+        if (sprite == null)
             return;
 
-        // Welt-Grid holen
-        Grid grid = GetGridByName("Collision");
+        Tilemap tilemap = GetTilemapByName("Collision");
 
-        if (grid == null)
+        if (tilemap == null)
         {
-            Debug.LogError("Kein Grid in der Szene gefunden!");
+            Debug.LogError("Tilemap 'Collision' nicht gefunden!");
             return;
         }
 
-        // Mausposition in Weltkoordinaten
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorld.z = 0f;
+        Vector3 worldMouse = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        worldMouse.z = 0f;
 
-        // Welt → Grid Cell
-        Vector3Int cell = grid.WorldToCell(mouseWorld);
+        Vector3Int cell = tilemap.WorldToCell(worldMouse);
 
-        // Mitte der Zelle holen (perfektes Snapping)
-        Vector3 cellCenter = grid.GetCellCenterWorld(cell);
+        Tile tile = ScriptableObject.CreateInstance<Tile>();
+        tile.sprite = sprite;
 
-        // Prefab spawnen
-        Instantiate(prefab, cellCenter, Quaternion.identity);
+        tilemap.SetTile(cell, tile);
+
+        // ChestTrigger an Position spawnen
+        Vector3 cellCenter = tilemap.GetCellCenterWorld(cell);
+        Instantiate(chestTriggerPrefab, cellCenter, Quaternion.identity);
     }
-    Grid GetGridByName(string name)
-    {
-        Grid[] grids = FindObjectsOfType<Grid>();
 
-        foreach (Grid g in grids)
+
+    Tilemap GetTilemapByName(string name)
+    {
+        Tilemap[] maps = FindObjectsOfType<Tilemap>();
+
+        foreach (Tilemap m in maps)
         {
-            if (g.gameObject.name == name)
-                return g;
+            if (m.gameObject.name == name)
+            {
+                Debug.Log("Tilemap gefunden: " + name);
+                return m;
+            }
         }
 
-        Debug.LogError("Kein Grid mit dem Namen '" + name + "' gefunden!");
+        Debug.LogError("Keine Tilemap mit dem Namen '" + name + "' gefunden!");
         return null;
     }
-
-
-
-
 }
