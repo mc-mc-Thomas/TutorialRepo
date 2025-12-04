@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
     Transform originalParent;
     CanvasGroup canvasGroup;
@@ -14,11 +14,14 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     Vector2 position2 = new Vector2(10f, 15f);
 
+    private InventoryController inventoryController;
+
 
     // Start is called before the first frame update
     void Start()
     {
         canvasGroup = GetComponent<CanvasGroup>();
+        inventoryController =  InventoryController.Instance;    
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -56,10 +59,28 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             //Is a slot under drop point
             if (dropSlot.currentItem != null)
             {
-                //Slot has an item - swap items
-                dropSlot.currentItem.transform.SetParent(originalSlot.transform);
-                originalSlot.currentItem = dropSlot.currentItem;
-                dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+                Item draggedItem = GetComponent<Item>();
+                Item targetItem = dropSlot.currentItem.GetComponent<Item>();
+
+                if (draggedItem.ID == targetItem.ID)
+                {
+                    targetItem.AddToStack(draggedItem.quantity);
+                    originalSlot.currentItem = null;
+                    Destroy(gameObject);
+                }
+                else
+                {
+
+                    //Slot has an item - swap items
+                    dropSlot.currentItem.transform.SetParent(originalSlot.transform);
+                    originalSlot.currentItem = dropSlot.currentItem;
+                    dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+                }
+
+
+
+               
             }
             else
             {
@@ -101,7 +122,27 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     void DropItem(Slot originalSlot)
     {
-        originalSlot.currentItem = null;
+        Item item = GetComponent<Item>();
+        int quantity = item.quantity;   
+
+        if (quantity > 1)
+        {
+            item.RemoveFromStack();
+
+            tranform.SetParent(originalParent);
+            GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+            quantity = 1;   
+        }
+        else
+        {
+            originalSlot.currentItem = null;
+
+        }
+
+
+
+       
 
         Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (playerTransform == null)
@@ -123,34 +164,48 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         //Instatiate drop Item
         Instantiate(gameObject, mausWeltPosition, Quaternion.identity);
+        Item droppedItem = dropItem.GetComponent<Item>();
+        droppedItem.quantity = 1;
 
         //Destroy the UI
-        Destroy(gameObject);
+        if (quantity <= 1 && originalSlot.currentItem == null)
+        {
+            Destroy(gameObject);
+
+        } 
+    }
 
 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button == PointerEventData.ImputButton.Right)
+        {
+            //split stack
+        }
 
-        //// Mausposition in Weltkoordinaten
-        //Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        //mouseWorldPos.z = 0f;
+    }
 
-        //Vector2 playerPos = playerTransform.position;
-        //Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+    public void SplitStack()
+    {
+        Item item = GetComponent<Item>();
+        if (item == null || item.quantity <= 1) return;
 
-        //// Abstand zwischen Maus und Spieler
-        //float distance = Vector2.Distance(playerPos, targetPos);
+        int splitAmount = item.quantity / 2;
+        if (splitAmount <= 0) return;
 
-        //// Wenn zu weit weg → clamp auf maximale Distanz
-        //if (distance > maxDropDistance)
-        //{
-        //    Vector2 direction = (targetPos - playerPos).normalized;
-        //    targetPos = playerPos + direction * maxDropDistance;
-        //}
+        item.RemoveFromStack(splitAmount);
 
-        //// Item spawnen an berechneter Position
-        //Instantiate(gameObject, targetPos, Quaternion.identity);
+        GameObject newItem = item.CloneItem(splitAmount);
 
-        //// UI-Item zerstören
-        //Destroy(gameObject);
+        if (inventoryController == null || newItem == null) return;
+
+        foreach(Transform slotTransform in inventoryController.inventoryPanel.transform)
+        {
+
+        }
+
+
+        InventoryController inventory = FindObjectOfType<InventoryController>(); //muss vllt weg
     }
 
 

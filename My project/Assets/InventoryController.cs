@@ -11,21 +11,25 @@ public class InventoryController : MonoBehaviour
     public int slotCount;
     public GameObject[] itemPrefabs;
 
+    public static InventoryController instance { get; private set; }
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         itemDictionary = FindObjectOfType<ItemDictionary>();
 
-        //for (int i = 0; i < slotCount; i++)
-        //{
-        //    Slot slot = Instantiate(slotPrefab, inventoryPanel.transform).GetComponent<Slot>();
-        //    if(i < itemPrefabs.Length)
-        //    {
-        //        GameObject item = Instantiate(itemPrefabs[i], slot.transform);
-        //        item.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        //        slot.currentItem = item;
-        //    }
-        //}
+       
     }
 
     public bool AddItem(GameObject itemPrefab)
