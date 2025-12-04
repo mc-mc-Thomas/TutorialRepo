@@ -256,6 +256,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 1
+  quantity: 1
+  quantityText: {fileID: 3415475500700797605}
 --- !u!212 &4942813595627415997
 SpriteRenderer:
   m_ObjectHideFlags: 0
