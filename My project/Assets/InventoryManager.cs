@@ -27,4 +27,10 @@ public class InventoryManager : MonoBehaviour
             menuActivated = true;
         }
     }
+
+    public void SetActive()
+    {
+        InvMenu.SetActive(true);
+        menuActivated = true;
+    }
 }

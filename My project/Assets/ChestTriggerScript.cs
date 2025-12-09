@@ -1,21 +1,48 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChestTriggerScript : MonoBehaviour
 {
     bool playerInRange = false;
+    bool chestOpen = false;
+    private Transform parent;
+    public GameObject chestUI;
+
+    public GameObject InvMenu;
+
+    void Start()
+    {
+        parent = GameObject.Find("InventoryCanvas").transform;
+    }
 
     void Update()
     {
         if (playerInRange && Input.GetKeyDown(KeyCode.E))
         {
-            OpenChest();
+            if (!chestOpen)
+                OpenChest();
+            else
+                CloseChest();
         }
     }
 
     void OpenChest()
     {
-        Debug.Log("Kiste geöffnet!");
-        // Hier kannst du Animation, Loot etc. triggern
+        chestOpen = true;
+        Debug.Log(" opened!");
+
+        InvMenu.SetActive(true);
+
+        Instantiate(chestUI, parent);
+
+
+    }
+
+    void CloseChest()
+    {
+        chestOpen = false;
+        Debug.Log(" closed!");
+        // Hier kommt dein Close-Code hin (Animation, Sound etc.)
     }
 
     private void OnTriggerEnter2D(Collider2D other)
