@@ -76,6 +76,11 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                     originalSlot.currentItem = dropSlot.currentItem;
                     dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
+
+                    transform.SetParent(dropSlot.transform);
+                    dropSlot.currentItem = gameObject;
+                    GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+
                 }
 
 
@@ -85,11 +90,12 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             else
             {
                 originalSlot.currentItem = null;
+                transform.SetParent(dropSlot.transform);
+                dropSlot.currentItem = gameObject;
+                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
             }
 
-            //Move item into drop slot
-            transform.SetParent(dropSlot.transform);
-            dropSlot.currentItem = gameObject;
+         
         }
         else
         {
@@ -102,6 +108,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             else
             {
                 transform.SetParent(originalParent);
+                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
             }
 
             //else
@@ -109,7 +116,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             transform.SetParent(originalParent);
         }
 
-        GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+       
     }
 
     bool IsWithinInventory(Vector2 mousePosition)
@@ -129,7 +136,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         {
             item.RemoveFromStack();
 
-            tranform.SetParent(originalParent);
+            transform.SetParent(originalParent);
             GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
             quantity = 1;   
@@ -164,8 +171,8 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         //Instatiate drop Item
         Instantiate(gameObject, mausWeltPosition, Quaternion.identity);
-        Item droppedItem = dropItem.GetComponent<Item>();
-        droppedItem.quantity = 1;
+        //Item droppedItem = dropItem.GetComponent<Item>();
+        //droppedItem.quantity = 1;
 
         //Destroy the UI
         if (quantity <= 1 && originalSlot.currentItem == null)
@@ -178,9 +185,9 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.ImputButton.Right)
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
-            //split stack
+            SplitStack();
         }
 
     }
@@ -201,9 +208,22 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         foreach(Transform slotTransform in inventoryController.inventoryPanel.transform)
         {
+            Slot slot = slotTransform.GetComponent<Slot>();
+            if(slot != null && slot.currentItem == null)
+            {
+                slot.currentItem = newItem;
+                newItem.transform.SetParent(slot.transform);
+                newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+                return;
 
+            }
         }
 
+
+        //No empty stack
+
+        item.AddToStack(splitAmount);
+        Destroy(newItem);
 
         InventoryController inventory = FindObjectOfType<InventoryController>(); //muss vllt weg
     }

@@ -19,7 +19,11 @@ public class Item : MonoBehaviour
 
     public void UpdateQuantityDisplay()
     {
-        quantityText.text = quantity > 1 ? quantity.ToString() : "";
+        if(quantityText != null)
+        {
+            quantityText.text = quantity > 1 ? quantity.ToString() : "";
+        }
+       
     }
 
     public void AddToStack(int amount = 1)
