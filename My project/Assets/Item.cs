@@ -11,6 +11,7 @@ public class Item : MonoBehaviour
 
     public TextMeshProUGUI quantityText;
 
+    public const int maxStack = 50;//neu
 
     private void Awake()
     {
@@ -28,7 +29,9 @@ public class Item : MonoBehaviour
 
     public void AddToStack(int amount = 1)
     {
-        quantity += amount;
+        //quantity += amount; alt
+        quantity = Mathf.Min(quantity + amount, maxStack);//neu
+
         UpdateQuantityDisplay();
     }
 
@@ -43,6 +46,8 @@ public class Item : MonoBehaviour
 
     public GameObject CloneItem(int newQuantity)
     {
+        newQuantity = Mathf.Min(newQuantity, maxStack); //  Klone nie über 50
+
         GameObject clone = Instantiate(gameObject);
             Item cloneItem = clone.GetComponent<Item>();
         cloneItem.quantity = newQuantity;   

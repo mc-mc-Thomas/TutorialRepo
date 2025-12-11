@@ -37,12 +37,95 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         transform.position = eventData.position; //Follow the mouse
     }
 
+    //public void OnEndDrag(PointerEventData eventData)
+    //{
+    //    canvasGroup.blocksRaycasts = true; //Enables raycasts
+    //    canvasGroup.alpha = 1f; //No longer transparent
+
+    //    Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>(); //Slot where item dropped
+    //    if (dropSlot == null)
+    //    {
+    //        GameObject dropItem = eventData.pointerEnter;
+    //        if (dropItem != null)
+    //        {
+    //            dropSlot = dropItem.GetComponentInParent<Slot>();
+    //        }
+    //    }
+    //    Slot originalSlot = originalParent.GetComponent<Slot>();
+
+    //    if (dropSlot != null)
+    //    {
+
+    //        //Is a slot under drop point
+    //        if (dropSlot.currentItem != null)
+    //        {
+    //            Item draggedItem = GetComponent<Item>();
+    //            Item targetItem = dropSlot.currentItem.GetComponent<Item>();
+
+    //            if (draggedItem.ID == targetItem.ID)
+    //            {
+    //                targetItem.AddToStack(draggedItem.quantity);
+    //                originalSlot.currentItem = null;
+    //                Destroy(gameObject);
+    //            }
+    //            else
+    //            {
+
+    //                //Slot has an item - swap items
+    //                dropSlot.currentItem.transform.SetParent(originalSlot.transform);
+    //                originalSlot.currentItem = dropSlot.currentItem;
+    //                dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+
+    //                transform.SetParent(dropSlot.transform);
+    //                dropSlot.currentItem = gameObject;
+    //                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+
+    //            }
+
+
+
+
+    //        }
+    //        else
+    //        {
+    //            originalSlot.currentItem = null;
+    //            transform.SetParent(dropSlot.transform);
+    //            dropSlot.currentItem = gameObject;
+    //            GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+    //        }
+
+
+    //    }
+    //    else
+    //    {
+    //        //If we are dropping is not within the inventory
+    //        if (!IsWithinInventory(eventData.position))
+    //        {
+    //            //Drop our item
+    //            DropItem(originalSlot);
+    //        }
+    //        else
+    //        {
+    //            transform.SetParent(originalParent);
+    //            GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+    //        }
+
+    //        //else
+    //        //No slot under drop point
+    //        transform.SetParent(originalParent);
+    //    }
+
+
+    //}
+
+
     public void OnEndDrag(PointerEventData eventData)
     {
-        canvasGroup.blocksRaycasts = true; //Enables raycasts
-        canvasGroup.alpha = 1f; //No longer transparent
+        canvasGroup.blocksRaycasts = true; // Enabling raycasts
+        canvasGroup.alpha = 1f; // Reset transparency
 
-        Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>(); //Slot where item dropped
+        Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>();
         if (dropSlot == null)
         {
             GameObject dropItem = eventData.pointerEnter;
@@ -51,73 +134,111 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                 dropSlot = dropItem.GetComponentInParent<Slot>();
             }
         }
+
         Slot originalSlot = originalParent.GetComponent<Slot>();
+        Item draggedItem = GetComponent<Item>();
 
         if (dropSlot != null)
         {
-
-            //Is a slot under drop point
             if (dropSlot.currentItem != null)
             {
-                Item draggedItem = GetComponent<Item>();
                 Item targetItem = dropSlot.currentItem.GetComponent<Item>();
 
                 if (draggedItem.ID == targetItem.ID)
                 {
-                    targetItem.AddToStack(draggedItem.quantity);
-                    originalSlot.currentItem = null;
-                    Destroy(gameObject);
+                    // ---- STACK LOGIK ----
+                    int freeSpace = Item.maxStack - targetItem.quantity;
+
+                    if (freeSpace > 0)
+                    {
+                        int amountToAdd = Mathf.Min(freeSpace, draggedItem.quantity);
+                        targetItem.AddToStack(amountToAdd);
+
+                        draggedItem.quantity -= amountToAdd;
+                        draggedItem.UpdateQuantityDisplay();
+
+                        if (draggedItem.quantity <= 0)
+                        {
+                            originalSlot.currentItem = null;
+                            Destroy(gameObject);
+                        }
+                        else
+                        {
+                            // Rest zurück in Originalslot
+                            transform.SetParent(originalSlot.transform);
+                            GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+                        }
+                    }
+                    else
+                    {
+                        // Kein Platz → zurück in Originalslot
+                        transform.SetParent(originalSlot.transform);
+                        GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+                    }
                 }
                 else
                 {
-
-                    //Slot has an item - swap items
+                    // ---- ITEM SWAP ----
                     dropSlot.currentItem.transform.SetParent(originalSlot.transform);
                     originalSlot.currentItem = dropSlot.currentItem;
                     dropSlot.currentItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
-
                     transform.SetParent(dropSlot.transform);
                     dropSlot.currentItem = gameObject;
-                    GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
-
+                    GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                 }
-
-
-
-               
             }
             else
             {
+                // ---- LEERER SLOT ----
                 originalSlot.currentItem = null;
                 transform.SetParent(dropSlot.transform);
                 dropSlot.currentItem = gameObject;
-                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+                GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
             }
-
-         
         }
         else
         {
-            //If we are dropping is not within the inventory
+            // ---- AUS INVENTAR DROPPEN ----
             if (!IsWithinInventory(eventData.position))
             {
-                //Drop our item
                 DropItem(originalSlot);
             }
             else
             {
-                transform.SetParent(originalParent);
-                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+                transform.SetParent(originalSlot.transform);
+                GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
             }
-
-            //else
-            //No slot under drop point
-            transform.SetParent(originalParent);
         }
-
-       
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     bool IsWithinInventory(Vector2 mousePosition)
     {
