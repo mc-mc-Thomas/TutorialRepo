@@ -33,4 +33,9 @@ public class InventoryManager : MonoBehaviour
         InvMenu.SetActive(true);
         menuActivated = true;
     }
+    public void SetunActive()
+    {
+        InvMenu.SetActive(false);
+        menuActivated = false;
+    }
 }

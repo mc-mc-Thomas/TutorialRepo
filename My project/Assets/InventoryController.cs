@@ -41,7 +41,6 @@ public class InventoryController : MonoBehaviour
                 slot.currentItem = newItem;
                 return true;
 
-
             }
         }
 

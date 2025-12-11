@@ -77,9 +77,6 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                 Destroy(gameObject);  // UI Item entfernen
                 return;
             }
-
-
-            // normales Item droppen
             DropItem(originalSlot);
         }
         else

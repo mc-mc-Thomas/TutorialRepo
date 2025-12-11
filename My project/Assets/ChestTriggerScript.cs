@@ -8,11 +8,23 @@ public class ChestTriggerScript : MonoBehaviour
     private Transform parent;
     public GameObject chestUI;
 
-    public GameObject InvMenu;
+    private string chestID;
+
+    private string
+
+    public InventoryManager inventoryManager;
 
     void Start()
     {
+        chestID = Guid.NewGuid().ToString();
         parent = GameObject.Find("InventoryCanvas").transform;
+
+        if (inventoryManager == null)
+        {
+            inventoryManager = FindObjectOfType<InventoryManager>();
+            if (inventoryManager == null)
+                Debug.LogWarning("InventoryManager nicht gefunden. Weisen Sie die Referenz im Inspector zu.");
+        }
     }
 
     void Update()
@@ -31,18 +43,26 @@ public class ChestTriggerScript : MonoBehaviour
         chestOpen = true;
         Debug.Log(" opened!");
 
-        InvMenu.SetActive(true);
+        inventoryManager.SetActive();
 
         Instantiate(chestUI, parent);
-
-
     }
 
     void CloseChest()
     {
         chestOpen = false;
-        Debug.Log(" closed!");
-        // Hier kommt dein Close-Code hin (Animation, Sound etc.)
+        inventoryManager.SetunActive();
+
+        StreamWriter sw = new StreamWriter("chest.txt");
+
+        //sw.WriteLine("Hello World!!");
+
+        //for(int i = 0; i < 16; i++)
+        //{
+        //    if ()
+        //}
+
+
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -54,6 +74,11 @@ public class ChestTriggerScript : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
+        {
             playerInRange = false;
+            CloseChest();
+        }
+            
+        
     }
 }
