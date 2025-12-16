@@ -8,23 +8,19 @@ public class ChestTriggerScript : MonoBehaviour
     private Transform parent;
     public GameObject chestUI;
 
-    private string chestID;
+    private GameObject chestUIInstance;
+    private InventoryManager inventoryManager;
 
-    private string
-
-    public InventoryManager inventoryManager;
+    private bool invStartPoint;
 
     void Start()
     {
-        chestID = Guid.NewGuid().ToString();
         parent = GameObject.Find("InventoryCanvas").transform;
 
         if (inventoryManager == null)
-        {
             inventoryManager = FindObjectOfType<InventoryManager>();
-            if (inventoryManager == null)
-                Debug.LogWarning("InventoryManager nicht gefunden. Weisen Sie die Referenz im Inspector zu.");
-        }
+
+        
     }
 
     void Update()
@@ -40,45 +36,47 @@ public class ChestTriggerScript : MonoBehaviour
 
     void OpenChest()
     {
+        invStartPoint = inventoryManager.menuActivated;
+
+        if (!invStartPoint)
+            inventoryManager.SetActive();
+
         chestOpen = true;
-        Debug.Log(" opened!");
 
-        inventoryManager.SetActive();
+        
+        if (chestUIInstance == null)
+        {
+            chestUIInstance = Instantiate(chestUI, parent);
+            chestUIInstance.SetActive(true);
+        }
+        else
+        {
+            chestUIInstance.SetActive(true);
+        }
+        
 
-        Instantiate(chestUI, parent);
     }
 
     void CloseChest()
     {
         chestOpen = false;
-        inventoryManager.SetunActive();
+        chestUIInstance.SetActive(false);
 
-        StreamWriter sw = new StreamWriter("chest.txt");
-
-        //sw.WriteLine("Hello World!!");
-
-        //for(int i = 0; i < 16; i++)
-        //{
-        //    if ()
-        //}
-
+        if (!invStartPoint)
+            inventoryManager.SetunActive();
+        else
+            inventoryManager.SetActive();
 
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
-            playerInRange = true;
+        playerInRange = true;
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
-        {
-            playerInRange = false;
-            CloseChest();
-        }
-            
-        
+        playerInRange = false;
+        CloseChest(); 
     }
 }
