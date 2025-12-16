@@ -90,4 +90,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c597a213077b70e44a1e8e88e3e7afcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  crafterUI: {fileID: 0}
+  crafterUI: {fileID: 2527992971125089798, guid: f023af6dde9e4934ab37fa69197f289c, type: 3}
