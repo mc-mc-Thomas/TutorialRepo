@@ -134,7 +134,6 @@ public class TreeTilemapManager : MonoBehaviour
             for (int i = 0; i < woodCount; i++)
             {
                 DropWood(mouseWorldPos);
-                Debug.Log("drop");
             }
             SpawnStump(connected, treeTilemaps[0]);
         }

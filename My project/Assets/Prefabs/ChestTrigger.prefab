@@ -91,4 +91,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chestUI: {fileID: 1317629757565256595, guid: 69cfab1787786e540beb5b5d4b13cc63, type: 3}
-  inventoryManager: {fileID: 0}

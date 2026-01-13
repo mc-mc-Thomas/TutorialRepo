@@ -93,4 +93,29 @@ public class InventoryController : MonoBehaviour
             }
         }
     }
+    public bool RemoveItems(int itemID, int amount)
+    {
+        int removed = 0;
+
+        foreach (Transform slotTransform in inventoryPanel.transform)
+        {
+            if (removed >= amount)
+                break;
+
+            Slot slot = slotTransform.GetComponent<Slot>();
+            if (slot != null && slot.currentItem != null)
+            {
+                Item item = slot.currentItem.GetComponent<Item>();
+                if (item != null && item.ID == itemID)
+                {
+                    Destroy(slot.currentItem);
+                    slot.currentItem = null;
+                    removed++;
+                }
+            }
+        }
+
+        return removed == amount;
+    }
+
 }
