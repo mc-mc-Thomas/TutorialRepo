@@ -87,6 +87,16 @@ Tilemap:
   m_GameObject: {fileID: 9208773938091148644}
   m_Enabled: 1
   m_Tiles:
+  - first: {x: 22, y: -17, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 350
+      m_TileSpriteIndex: 350
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   - first: {x: -2, y: -16, z: 0}
     second:
       serializedVersion: 2
@@ -4289,6 +4299,8 @@ Tilemap:
     m_Data: {fileID: 11400000, guid: 16c2f6e7686809b4baef53b36e40e92d, type: 2}
   - m_RefCount: 1
     m_Data: {fileID: 11400000, guid: 73885268b72c7a64bbdfc93aa41e5013, type: 2}
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 8e7c0535036d7434295571fa8778b897, type: 2}
   m_TileSpriteArray:
   - m_RefCount: 1
     m_Data: {fileID: 2054363266, guid: 3ac9072ad4d5ec54abddd91e1a0fd66d, type: 3}
@@ -4990,8 +5002,10 @@ Tilemap:
     m_Data: {fileID: 39215714, guid: 3ac9072ad4d5ec54abddd91e1a0fd66d, type: 3}
   - m_RefCount: 1
     m_Data: {fileID: 1949470427, guid: 3ac9072ad4d5ec54abddd91e1a0fd66d, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: -704693975, guid: 47d5f4a5213327c4c9e44d0a73749951, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 350
+  - m_RefCount: 351
     m_Data:
       e00: 1
       e01: 0
@@ -5010,13 +5024,13 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 350
+  - m_RefCount: 351
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Origin: {x: -2, y: -16, z: 0}
-  m_Size: {x: 36, y: 17, z: 1}
+  m_Origin: {x: -2, y: -17, z: 0}
+  m_Size: {x: 36, y: 18, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
@@ -5085,7 +5099,7 @@ TilemapRenderer:
   m_Mode: 0
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
---- !u!114 &2488351042033591915
+--- !u!114 &2763610309640055944
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

@@ -11,42 +11,150 @@ public class InventoryController : MonoBehaviour
     public int slotCount;
     public GameObject[] itemPrefabs;
 
+    public static InventoryController Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         itemDictionary = FindObjectOfType<ItemDictionary>();
 
-        //for (int i = 0; i < slotCount; i++)
-        //{
-        //    Slot slot = Instantiate(slotPrefab, inventoryPanel.transform).GetComponent<Slot>();
-        //    if(i < itemPrefabs.Length)
-        //    {
-        //        GameObject item = Instantiate(itemPrefabs[i], slot.transform);
-        //        item.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        //        slot.currentItem = item;
-        //    }
-        //}
+       
     }
+
+    //public bool AddItem(GameObject itemPrefab)
+    //{
+
+    //    //neu f�r Item stacking 
+    //    Item itemToAdd = itemPrefab.GetComponent<Item>();
+    //    if (itemToAdd == null) return false;
+
+
+
+    //    //Check if we have this item in inventory
+    //    foreach (Transform slotTransform in inventoryPanel.transform)
+    //    {
+    //        Slot slot = slotTransform.GetComponent<Slot>();
+    //        if (slot != null && slot.currentItem != null)
+    //        {
+    //            Item slotitem = slot.currentItem.GetComponent<Item>();
+    //            if (slotitem != null && slotitem.ID == itemToAdd.ID)
+    //            {
+    //                //Same item stack them 
+    //                slotitem.AddToStack();
+    //                return true;
+    //            }
+
+
+    //        }
+    //    }
+    //    //Look for empty slot
+    //    foreach (Transform slotTransform in inventoryPanel.transform)
+    //    {
+    //        Slot slot = slotTransform.GetComponent<Slot>();
+    //        if (slot != null && slot.currentItem == null)
+    //        {
+    //            GameObject newItem = Instantiate(itemPrefab, slot.transform);
+    //            newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+    //            slot.currentItem = newItem;
+    //            return true;
+
+
+    //        }
+    //    }
+    //    Debug.Log("Inventory is full!");
+    //    return false;
+    //}
+
+
+
+
+
 
     public bool AddItem(GameObject itemPrefab)
     {
-        //Look for empty slot
+        Item itemToAdd = itemPrefab.GetComponent<Item>();
+        if (itemToAdd == null) return false;
+
+        int amountToAdd = itemToAdd.quantity; // Menge im aufgehobenen Item
+
+        // ------------------------------------------
+        // 1. EXISTIERENDE STACKS F�LLEN
+        // ------------------------------------------
         foreach (Transform slotTransform in inventoryPanel.transform)
         {
             Slot slot = slotTransform.GetComponent<Slot>();
-            if (slot != null && slot.currentItem == null)
-            {
-                GameObject newItem = Instantiate(itemPrefab, slot.transform);
-                newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-                slot.currentItem = newItem;
-                return true;
 
+            if (slot != null && slot.currentItem != null)
+            {
+                Item slotItem = slot.currentItem.GetComponent<Item>();
+
+                if (slotItem != null && slotItem.ID == itemToAdd.ID)
+                {
+                    // Wieviel Platz ist noch im Stack?
+                    int freeSpace = Item.maxStack - slotItem.quantity;
+
+                    if (freeSpace > 0)
+                    {
+                        int amountToPut = Mathf.Min(freeSpace, amountToAdd);
+
+                        slotItem.AddToStack(amountToPut);
+                        amountToAdd -= amountToPut;
+
+                        if (amountToAdd <= 0)
+                            return true;
+                    }
+                }
             }
         }
 
-        Debug.Log("Inventory is full!");
+        // ------------------------------------------
+        // 2. NEUE SLOTS F�LLEN (falls noch Menge �brig ist)
+        // ------------------------------------------
+        foreach (Transform slotTransform in inventoryPanel.transform)
+        {
+            Slot slot = slotTransform.GetComponent<Slot>();
+
+            if (slot != null && slot.currentItem == null)
+            {
+                int newStackAmount = Mathf.Min(amountToAdd, Item.maxStack);
+
+                GameObject newItem = Instantiate(itemPrefab, slot.transform);
+                newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+                Item newItemComp = newItem.GetComponent<Item>();
+                newItemComp.quantity = newStackAmount;
+                newItemComp.UpdateQuantityDisplay();
+
+                slot.currentItem = newItem;
+
+                amountToAdd -= newStackAmount;
+
+                if (amountToAdd <= 0)
+                    return true;
+            }
+        }
+
+        Debug.Log("Inventory FULL!");
         return false;
     }
+
+
+
+
+
+
+
 
     public List<InventorySaveData> GetInventoryItems()
     {
@@ -57,7 +165,7 @@ public class InventoryController : MonoBehaviour
             if (slot.currentItem != null)
             {
                 Item item = slot.currentItem.GetComponent<Item>();
-                invData.Add(new InventorySaveData { itemID = item.ID, slotIndex = slotTranform.GetSiblingIndex() });
+                invData.Add(new InventorySaveData { itemID = item.ID, slotIndex = slotTranform.GetSiblingIndex(), quantity = item.quantity });
             }
         }
         return invData;
@@ -88,6 +196,14 @@ public class InventoryController : MonoBehaviour
                 {
                     GameObject item = Instantiate(itemPrefab, slot.transform);
                     item.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+                    Item itemComponent = item.GetComponent<Item>();
+                    if (itemComponent != null && data.quantity > 1)
+                    {
+                        itemComponent.quantity = data.quantity;
+                        itemComponent.UpdateQuantityDisplay();
+                    }
+
                     slot.currentItem = item;
                 }
             }
